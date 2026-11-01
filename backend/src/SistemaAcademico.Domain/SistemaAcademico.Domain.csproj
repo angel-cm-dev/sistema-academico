@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- El dominio no depende de ningún paquete externo: solo reglas de negocio puras. -->
+</Project>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\SistemaAcademico.Domain\SistemaAcademico.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Solo la abstracción de EF Core (DbSet/IQueryable), nunca un proveedor concreto. Ver ADR 0002. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+  </ItemGroup>
+</Project>

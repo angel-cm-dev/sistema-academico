@@ -1,0 +1,52 @@
+# Levanta todo el sistema con un solo comando:
+#   cp .env.example .env   (y edita los valores)
+#   docker compose up --build
+# Frontend: http://localhost:8080  ·  API/Scalar: http://localhost:5080/scalar/v1
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sistema_academico}
+      POSTGRES_USER: ${POSTGRES_USER:-academico}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Database__Provider: Postgres
+      Database__Seed: ${SEED_DEMO:-true}
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB:-sistema_academico};Username=${POSTGRES_USER:-academico};Password=${POSTGRES_PASSWORD}"
+      Jwt__Key: ${JWT_KEY:?Define JWT_KEY en .env (mínimo 32 caracteres)}
+      Jwt__ExpirationMinutes: ${JWT_EXPIRATION_MINUTES:-120}
+      Pensiones__Mora__TasaDiaria: ${MORA_TASA_DIARIA:-0.001}
+      Pensiones__Mora__DiasGracia: ${MORA_DIAS_GRACIA:-3}
+      Pensiones__Mora__TopePorcentaje: ${MORA_TOPE_PORCENTAJE:-0.10}
+    ports:
+      - "${API_PORT:-5080}:8080"
+
+  web:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+
+volumes:
+  pgdata:
